@@ -1,0 +1,57 @@
+#!/usr/bin/perl -w
+# Zenoss: 0:'Clean', 1:'Debug', 2:'Info', 3:'Warning', 4:'Error', 5:'Critical'
+use constant DEV_OK      => 00;
+use constant DEV_NO_DATA => 30;
+use constant DEV_FAILED  => 50;
+$param = shift @ARGV;
+if( !$param ) {
+	$param = "health";
+}
+
+$FILES = '/var/cache/snmp/smart-health';
+
+
+sub smHealth {
+	$drive = $_[0];
+	# grab the parameter from the file
+	my $health;
+	$health = DEV_FAILED;
+	open DR, "$FILES-$drive";
+	if( !DR ) {
+		$health = DEV_NO_DATA;
+	} else {
+		while ( defined ( $line = <DR> ) ) {
+			chomp $line;
+			if($line =~ /.*test result: PASSED.*/) {
+				$health = DEV_OK;
+			} 
+		}
+		close DR;
+	}
+
+	print "$health\n";
+}
+
+# run through current drives
+opendir LS, "/dev" or die "FATAL - can't list /dev: $!\n";
+while ( defined ( $drive = readdir LS ) ) {
+	if ( $drive !~ /^sd[a-z]$/ ) { next; }	# skip non drives
+	push @drives, $drive
+}
+closedir LS;
+
+$i = 1;
+foreach $drive (sort @drives) {
+	# deal with missing files
+
+	if ($param =~ /DeviceDescr/i) {
+		print "/dev/$drive\n";
+	} elsif ($param =~ /Index/i) {
+                print "$i\n";
+		$i = $i + 1;
+	} else {
+		&smHealth($drive);
+	};
+}
+
+

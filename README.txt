@@ -1,17 +1,19 @@
-1. 在zenoss上安装zenpacks
+INSTALL
+1. in the machine where zenoss is installed
 zenpack --install ZenPacks.community.SMART
 
-2. 在目标机器上，把script/smartmon复制到/opt下，在root用户或者/etc/crontab里加入
+2. in the target machine which is monitored
+copy script/smartmon to /opt, and add the following line in /etc/crontab or crontab of root's.
 
 */5 * * * * (/bin/sh /opt/smartmon/smartmon.sh)
 
-smartmon.sh负责在/var/cache/snmp/中生成类似smart-health-sda的文件。
+smartmon.sh will generate files like smart-health-sda in /var/cache/snmp/
 
-3. 在/etc/snmp/snmpd.conf中加入
+3. open /etc/snmp/snmpd.conf, and add the following lines
 
 extend  smartHealth /opt/smartmon/smart-health
 extend  smartDeviceDescr /opt/smartmon/smart-health DeviceDescr 
 extend  smartDeviceIndex /opt/smartmon/smart-health Index
 
-smart-health读取/var/cache/snmp/smart-health-*，并分析后返回结果，以符合snmp扩展标准。
+smart-health will read files /var/cache/snmp/smart-health-*, analyze content and return result, which is according to snmp standards.
 
